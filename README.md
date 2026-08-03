@@ -161,15 +161,15 @@ against a real production site (not just checking the mechanics exist):
 | Page with redirect | ✅ Mechanics proven (3 real live redirect chains captured correctly) — but never caught a live URL Google *itself* currently classifies as this specific category; every candidate had already settled into a different/stale status by the time it was checked |
 | Server error (5xx) | ✅ Detection mechanics proven — status capture and `check-stability.cjs`'s stable-vs-intermittent classification both confirmed correct against a safe external test endpoint. Not tested against a real production 5xx, deliberately — provoking real server errors on a live site isn't appropriate stress-testing |
 | Not found (404) | ⚠️ Genuinely can't be tested on some sites — one real production site checked here turned out to be structurally incapable of returning a true 404 at all (CDN rewrites every origin error into an HTTP 200 fallback). Status capture + `HTTP_STATUS_PROBLEM` classification are proven to work correctly *when* a real 404 exists; whether your site can even produce one is itself worth checking first |
-| Discovered - currently not indexed | ⚠️ Attempted, no live example found — checked the newest-`lastmod` sitemap entries (same-day) across two different sitemaps on a real site; all were already crawled. Sites with slower/thinner crawl coverage than the one tested here should find this easier to hit |
+| Discovered - currently not indexed | ✅ Proven — verified against a real GSC Coverage Drilldown export for this exact status (thousands of affected URLs). Also surfaced and fixed a real bug in `check-sitemap.cjs`: it only followed one level of sitemap nesting, so on a site with a deeper sitemap-of-sitemaps structure it mistook a nested index's own `<sitemap>` entries for real page URLs and never reached the actual leaf urlsets. Now recurses to arbitrary depth; re-verified against a real affected URL — confirmed present in the sitemap (`sitemap-1.xml` of 10 paginated leaf sitemaps) and never crawled, exactly matching GSC's claim |
 | Duplicate without user-selected canonical | ⚠️ Attempted, no live example found — every duplicate-content candidate checked already had a canonical tag set (the tested site's default canonical behavior is solid); sites without consistent canonical tagging should find this easier to hit |
 | Alternate page with proper canonical tag | ℹ️ Not really a "problem" — this GSC status means canonical handling is already working correctly; the tool confirms `HEALTHY` quickly rather than investigating |
 
-Two ⚠️ rows aren't gaps in the tool so much as "this particular site didn't
-have an example lying around" — the underlying evidence-gathering (live
-fetch, sitemap `lastmod` inspection, canonical extraction) is the same
-proven machinery used everywhere else. If you hit one of these categories on
-your own site, it should work the same way the ✅ rows do — a PR adding that
+The remaining ⚠️ "no live example found" row isn't a gap in the tool so much
+as "this particular site didn't have an example lying around" — the
+underlying evidence-gathering (live fetch, canonical extraction) is the same
+proven machinery used everywhere else. If you hit this category on your own
+site, it should work the same way the ✅ rows do — a PR adding that
 real example to `references/examples/` would close the loop for the next
 person.
 

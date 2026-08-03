@@ -5,15 +5,19 @@
  *
  * Discovers the sitemap index (default `<origin>/sitemap.xml` — override via
  * config `sitemapIndexPath` if your site serves it elsewhere, e.g.
- * `/sitemaps/sitemap.xml`). Then locates and checks the child sitemap
- * matching the URL's route family so we never conclude "missing from
- * sitemap" from the index alone.
+ * `/sitemaps/sitemap.xml`). Sitemap nesting depth varies by site — some
+ * serve one flat index of leaf urlsets, others nest a sitemap-of-sitemaps
+ * multiple levels deep (verified on a real production site: index → a
+ * second index → 35+ per-route-family leaf urlsets). `resolveLeafSitemaps`
+ * below distinguishes `<sitemapindex>` (more nesting to follow) from
+ * `<urlset>` (real page URLs) at every level and recurses until it hits
+ * real leaves, however deep that is — never assumes exactly one hop.
  *
  * IMPORTANT: don't trust a documented routing scheme to name the sitemap
  * family with certainty — actual production URLs can drift from what docs
  * say (prefixes get added/removed over time). When a --family isn't given
  * and the URL has no recognized prefix (from config `routeFamilies`), this
- * script checks EVERY discovered child sitemap rather than guessing from a
+ * script checks EVERY discovered leaf sitemap rather than guessing from a
  * fixed list, so "not found in sitemap" is a real finding, not a false
  * negative from a stale assumption.
  *
@@ -64,6 +68,50 @@ function extractLocs(xml) {
   return out;
 }
 
+// True if this document is itself an index of further sitemaps (more
+// nesting below it), false if it's a leaf urlset of real page <url> entries.
+function isSitemapIndex(xml) {
+  return /<sitemapindex[\s>]/i.test(xml);
+}
+
+/**
+ * Recursively walks a sitemap tree of arbitrary depth and returns only the
+ * real leaf sitemaps (urlsets) reachable from `startUrl`, each with its
+ * actual page-URL `locs`. Never treats an index's nested `<sitemap>` entries
+ * as page URLs, however many levels of indirection are in between.
+ *
+ * Family filtering is applied at EVERY level, not just the top: if none of
+ * an index's children match `/${familyFilter}/` at this level, that split
+ * likely happens deeper (e.g. a top-level index with a single generic
+ * pass-through child) — fall back to expanding every child rather than
+ * concluding the family doesn't exist here.
+ *
+ * @returns {Promise<Array<{sitemapUrl: string, urlCount: number, locs: string[]}>>}
+ */
+async function resolveLeafSitemaps(startUrl, { familyFilter, exclude, visited = new Set(), depth = 0 } = {}) {
+  const MAX_DEPTH = 6; // guards against a circular/malformed sitemap graph
+  if (depth > MAX_DEPTH || visited.has(startUrl)) return [];
+  visited.add(startUrl);
+
+  const res = await fetchText(startUrl);
+  const locs = extractLocs(res.body);
+
+  if (!isSitemapIndex(res.body)) {
+    return [{ sitemapUrl: startUrl, urlCount: locs.length, locs }];
+  }
+
+  let toExpand = familyFilter
+    ? locs.filter((loc) => loc.includes(`/${familyFilter}/`))
+    : locs.filter((loc) => !exclude.some((x) => loc.includes(x)));
+  if (familyFilter && toExpand.length === 0) toExpand = locs;
+
+  const results = [];
+  for (const child of toExpand) {
+    results.push(...await resolveLeafSitemaps(child, { familyFilter, exclude, visited, depth: depth + 1 }));
+  }
+  return results;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const url = args._[0];
@@ -76,27 +124,26 @@ async function main() {
   const sitemapIndexPath = config.sitemapIndexPath || '/sitemap.xml';
   const indexUrl = `${origin}${sitemapIndexPath}`;
   const indexRes = await fetchText(indexUrl);
-  const childSitemaps = extractLocs(indexRes.body);
+  const topLevelLocs = extractLocs(indexRes.body);
 
   const family = args.family || guessFamily(url, config.routeFamilies);
 
-  // Fast path: a named/guessed family checks exactly one sitemap.
-  // Ambiguous path: no reliable family — scan every plausible child sitemap
-  // rather than guessing, so absence is evidence, not an assumption.
-  const sitemapsToCheck = family
-    ? childSitemaps.filter((loc) => loc.includes(`/${family}/`))
-    : childSitemaps.filter((loc) => !EXCLUDE_FROM_FULL_SCAN.some((x) => loc.includes(x)));
+  // Fast path: a named/guessed family recurses toward just the matching
+  // branch(es) of the sitemap tree, however deep the split occurs.
+  // Ambiguous path: no reliable family — recursively expand every branch
+  // not excluded as structurally non-entity, so absence is evidence, not
+  // an assumption from stopping one level too early.
+  const leafSitemaps = [];
+  for (const child of topLevelLocs) {
+    leafSitemaps.push(...await resolveLeafSitemaps(child, { familyFilter: family, exclude: EXCLUDE_FROM_FULL_SCAN }));
+  }
 
   const urlsToFind = args.also ? [url, args.also] : [url];
   const occurrences = {};
   const foundIn = {};
   for (const u of urlsToFind) { occurrences[u] = 0; foundIn[u] = []; }
 
-  const checked = [];
-  for (const sitemapUrl of sitemapsToCheck) {
-    const childRes = await fetchText(sitemapUrl);
-    const locs = extractLocs(childRes.body);
-    checked.push({ sitemapUrl, urlCount: locs.length });
+  for (const { sitemapUrl, locs } of leafSitemaps) {
     for (const u of urlsToFind) {
       const normalized = u.replace(/\/$/, '');
       const matches = locs.filter((l) => l.replace(/\/$/, '') === normalized).length;
@@ -109,11 +156,11 @@ async function main() {
     inputUrl: url,
     sitemapIndexUrl: indexUrl,
     indexHttpStatus: indexRes.status,
-    discoveredChildSitemaps: childSitemaps,
+    topLevelSitemapEntries: topLevelLocs,
     familyGuess: family,
     ambiguousPrefixless: !family,
     scanMode: family ? 'single-family' : 'full-scan-excluding-non-entity-sitemaps',
-    childSitemapsChecked: checked,
+    leafSitemapsChecked: leafSitemaps.map(({ sitemapUrl, urlCount }) => ({ sitemapUrl, urlCount })),
     occurrences,
     foundIn,
   }, null, 2));
