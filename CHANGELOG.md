@@ -21,6 +21,14 @@
   valid, correctly-targeted canonical live. No currently-reproducible
   example found; strengthens the existing caveat with real evidence instead
   of overturning it.
+- **Corrected an inaccurate claim**: the README previously stated the origin
+  project's site was "structurally incapable of returning a true 404" (a
+  CDN 200-fallback). Re-verified against a real GSC "Not found (404)"
+  Coverage Drilldown export (392 affected URLs) — `fetch-as-googlebot.cjs`
+  correctly captured a genuine raw HTTP 404 on 10 of 11 sampled URLs freshly
+  crawled by Google in the last ~10 days, across 3 path families. The prior
+  claim was wrong (or the site's behavior changed since it was written).
+  Upgraded from "genuinely can't be tested on some sites" to proven.
 
 ## 1.0.0 — Initial open-source release
 
