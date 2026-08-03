@@ -18,9 +18,7 @@ frequently stale, and its own API and UI can disagree with each other. This
 tool encodes an evidence-first workflow: reproduce the current state, gather
 fresh evidence from multiple independent sources, build a timeline, and only
 then classify and recommend — instead of jumping straight from "ticket says
-bug" to "change code." See `references/examples/tris-artist-case-study.md`
-for a full worked example of exactly this pattern from this tool's origin
-project.
+bug" to "change code."
 
 ## Install
 

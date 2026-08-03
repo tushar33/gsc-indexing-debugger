@@ -9,7 +9,6 @@ generation, Google stale state / no current code owner, cross-system, or
 unknown.
 
 Full classification taxonomy and rules: `references/classification-guide.md`
-Worked example (from this tool's origin project): `references/examples/tris-artist-case-study.md`
 Report skeleton: `templates/report-template.md`
 JSON evidence shape: `templates/evidence-schema.json`
 Optional per-site config: `gsc-indexing-debugger.config.json` (see `.config.example.json`)
