@@ -19,7 +19,7 @@ const {
 
 async function analyze(url) {
   const res = await fetchAsGooglebot(url);
-  const signals = extractSignals(res.body);
+  const signals = extractSignals(res.body, res.headers);
   const visibleText = extractVisibleText(res.body);
   const normalized = normalizeForComparison(visibleText);
   return {

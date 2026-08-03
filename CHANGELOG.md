@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added `X-Robots-Tag` response-header checking to `extractSignals()`
+  (`extract-signals.cjs`, `compare-pages.cjs`). Previously only checked the
+  meta `robots` tag from the HTML -- a page can have a perfectly clean meta
+  tag while still being excluded via a noindex directive set at the CDN/edge
+  layer (e.g. a response header added by a Lambda@Edge function), which was
+  invisible to this skill. New `xRobotsTag` (raw header value) and `noindex`
+  (combined boolean, true if either source says noindex) fields on the
+  signals object. Surfaced while investigating a real "Excluded by noindex
+  tag" validation-failure batch on the origin project.
 - Fixed `check-sitemap.cjs` to recurse through sitemap nesting of arbitrary
   depth. It previously assumed exactly one level of indirection between the
   top-level index and real leaf urlsets; on a site with a deeper

@@ -134,8 +134,11 @@ vs `UNKNOWN_VARIANCE`.
 ```
 node scripts/extract-signals.cjs --url <url>
 ```
-Title, canonical (+ count), meta description, H1, OG/Twitter tags, robots,
-hreflang, JSON-LD (`@context`/`@type`/`@id`/`url`/`name`/`description`/
+Title, canonical (+ count), meta description, H1, OG/Twitter tags, robots
+(meta tag AND `X-Robots-Tag` response header — checks both, since a clean
+meta tag alone doesn't rule out a noindex set via a CDN/edge function; see
+`noindex`/`xRobotsTag` in the output), hreflang, JSON-LD
+(`@context`/`@type`/`@id`/`url`/`name`/`description`/
 `mainEntity`/`breadcrumb`/`image`/`sameAs`). Distinguish `IDENTITY_BUG` (e.g.
 JSON-LD `@id` pointing to another entity) from `QUALITY_WEAKNESS` (e.g.
 generic description shared by many pages — only escalate to a bug if main

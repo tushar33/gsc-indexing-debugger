@@ -4,6 +4,12 @@
  * Phase 5 — extract SEO identity signals (title, canonical, meta, OG, JSON-LD,
  * robots, hreflang) from a live URL or a previously saved HTML file.
  *
+ * Checks BOTH noindex sources: the meta robots tag (from the HTML) and the
+ * X-Robots-Tag response header (from a CDN/edge function -- invisible to
+ * anything that only parses HTML, and easy to miss since a clean meta tag
+ * alone doesn't rule it out). --file mode has no associated response, so
+ * xRobotsTag/noindex there only reflect the meta tag.
+ *
  * Usage:
  *   node extract-signals.cjs --url <url>
  *   node extract-signals.cjs --file <path-to-html>
@@ -31,6 +37,7 @@ async function main() {
   let html;
   let finalUrl = args.url || null;
   let httpStatus = null;
+  let headers = {};
   if (args.file) {
     html = fs.readFileSync(args.file, 'utf8');
   } else {
@@ -38,8 +45,9 @@ async function main() {
     html = res.body;
     finalUrl = res.finalUrl;
     httpStatus = res.httpStatus;
+    headers = res.headers;
   }
-  const signals = extractSignals(html);
+  const signals = extractSignals(html, headers);
   console.log(JSON.stringify({
     sourceUrl: args.url || null,
     sourceFile: args.file || null,

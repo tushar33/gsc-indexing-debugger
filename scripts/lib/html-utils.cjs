@@ -110,15 +110,32 @@ function extractJsonLd(html) {
   return blocks;
 }
 
-function extractSignals(html) {
+/**
+ * @param {string} html
+ * @param {Record<string,string>} [headers] - Response headers (lowercase keys,
+ *   as returned by fetchAsGooglebot). Optional -- pass {} or omit when
+ *   working from a saved HTML file with no associated response.
+ */
+function extractSignals(html, headers = {}) {
   const canonicals = extractAllCanonicals(html);
+  const robotsMeta = extractRobotsMeta(html);
+  // Google treats a noindex directive from EITHER source as equivalent --
+  // a page can have a clean meta robots tag but still be excluded via an
+  // X-Robots-Tag response header (commonly set by a CDN/edge function, and
+  // invisible to anything that only parses the HTML). Report both raw
+  // signals plus a combined boolean so a clean meta tag alone is never
+  // mistaken for "definitely indexable".
+  const xRobotsTag = headers['x-robots-tag'] || headers['X-Robots-Tag'] || null;
+  const noindex = /noindex/i.test(robotsMeta || '') || /noindex/i.test(xRobotsTag || '');
   return {
     title: extractFirst(html, /<title[^>]*>([\s\S]*?)<\/title>/i),
     canonical: canonicals[0] || null,
     canonicalCount: canonicals.length,
     allCanonicals: canonicals,
     metaDescription: extractMetaContent(html, 'name', 'description'),
-    robots: extractRobotsMeta(html),
+    robots: robotsMeta,
+    xRobotsTag,
+    noindex,
     ogTitle: extractMetaContent(html, 'property', 'og:title'),
     ogDescription: extractMetaContent(html, 'property', 'og:description'),
     ogImage: extractMetaContent(html, 'property', 'og:image'),
