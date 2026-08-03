@@ -14,6 +14,13 @@
 - Verified "Discovered - currently not indexed" coverage against a real GSC
   Coverage Drilldown export, upgrading it from "no live example found" to
   proven — this is what surfaced the sitemap-recursion bug above.
+- Re-verified "Duplicate without user-selected canonical" against a second
+  real GSC Coverage Drilldown export (999 affected URLs). Sampled 9 across
+  the export using `extract-signals.cjs`: 2 now 404 (content removed since
+  GSC's last crawl — a stale classification), the other 7 already have a
+  valid, correctly-targeted canonical live. No currently-reproducible
+  example found; strengthens the existing caveat with real evidence instead
+  of overturning it.
 
 ## 1.0.0 — Initial open-source release
 
