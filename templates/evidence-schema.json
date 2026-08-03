@@ -1,0 +1,92 @@
+{
+  "_meta": {
+    "purpose": "Machine-readable evidence/report shape for gsc-indexing-debugger. Copy this object per investigation and fill in fields; use only the enum values listed in _meta.enums for classification fields.",
+    "enums": {
+      "primaryClassification": [
+        "HEALTHY", "ALREADY_RESOLVED", "STALE_GSC_STATE", "WAITING_FOR_RECRAWL",
+        "CURRENT_CROSS_CANONICAL_BUG", "WRONG_ENTITY_PRERENDERED", "PRERENDER_UNSTABLE",
+        "RAW_SPA_SHELL", "REDIRECT_CONFLICT", "SITEMAP_CONFLICT", "NEAR_DUPLICATE_CONTENT",
+        "GENERIC_METADATA", "GENERIC_IMAGE_FALLBACK", "INTERNAL_LINK_SIGNAL_ISSUE",
+        "NOINDEX_OR_ROBOTS_CONFLICT", "HTTP_STATUS_PROBLEM", "SOFT_404", "UNKNOWN_NEEDS_MANUAL_REVIEW"
+      ],
+      "likelyOwner": [
+        "frontend", "backend/API", "prerender", "CloudFront/infrastructure",
+        "CMS/content/data", "sitemap generation", "Google stale state / no current code owner",
+        "cross-system", "unknown"
+      ],
+      "contentSimilarity": [
+        "IDENTICAL", "NEAR_IDENTICAL", "STRUCTURALLY_SIMILAR_CONTENT_DISTINCT", "CLEARLY_DISTINCT", "UNKNOWN"
+      ],
+      "responseStability": [
+        "STABLE", "SIZE_VARIANCE", "HASH_VARIANCE", "INTERMITTENT_RAW_SHELL",
+        "INTERMITTENT_WRONG_ENTITY", "INTERMITTENT_HTTP_FAILURE", "UNKNOWN_VARIANCE"
+      ],
+      "confidence": ["CONFIRMED", "STRONGLY_SUPPORTED", "POSSIBLE", "NOT_REPRODUCIBLE", "UNKNOWN"],
+      "evidenceTag": ["FACT", "HYPOTHESIS", "HISTORICAL_STATE", "CURRENT_STATE"]
+    }
+  },
+  "investigation": {
+    "mode": "single_url | url_plus_canonical | url_list | bulk_csv | follow_up_verification",
+    "investigatedAt": null,
+    "reportedIssue": {
+      "affectedUrl": null,
+      "issueCategory": null,
+      "reportedDate": null,
+      "sourceOfReport": null,
+      "reportedGoogleSelectedCanonical": null,
+      "ticketAssumptions": [],
+      "proposedRootCause": null,
+      "evidenceTag": "HYPOTHESIS"
+    },
+    "gscState": {
+      "automated": false,
+      "note": "GSC EVIDENCE NOT AUTOMATED — manually supplied text/screenshot/CSV/API JSON only",
+      "inspectedUrl": null,
+      "verdict": null,
+      "coverageState": null,
+      "lastCrawlTime": null,
+      "crawledAs": null,
+      "pageFetchState": null,
+      "robotsTxtState": null,
+      "indexingState": null,
+      "userCanonical": null,
+      "googleCanonical": null,
+      "referringUrls": [],
+      "sitemapDiscovery": null,
+      "crawlAgeDays": null
+    },
+    "liveFetchEvidence": {
+      "requestedUrl": null,
+      "redirectChain": [],
+      "finalUrl": null,
+      "httpStatus": null,
+      "headers": {},
+      "contentHash": null
+    },
+    "stability": {
+      "requestCount": null,
+      "results": [],
+      "classification": null
+    },
+    "identitySignals": {},
+    "contentComparison": {
+      "comparedAgainst": null,
+      "comparisonFacts": {},
+      "classification": null
+    },
+    "sitemapEvidence": {},
+    "internalLinkEvidence": {
+      "currentLiveLinksFound": [],
+      "historicalGscReferringPages": []
+    },
+    "timeline": [],
+    "primaryClassification": null,
+    "secondaryFindings": [],
+    "likelyOwner": null,
+    "rootCauseConfidence": null,
+    "recommendedAction": null,
+    "whatNotToChange": [],
+    "commandsRun": [],
+    "evidenceFiles": []
+  }
+}

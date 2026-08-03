@@ -1,0 +1,15 @@
+{
+  "_comment": "Copy this file to gsc-indexing-debugger.config.json (gitignored) and fill in your own site's values. Every field is optional — the tool works without this file, just with less site-specific shortcut behavior.",
+
+  "domain": "example.com",
+  "_domain_comment": "Bare hostname (no www, no protocol). Used to auto-guess the Search Console siteUrl for Domain properties.",
+
+  "siteUrl": "sc-domain:example.com",
+  "_siteUrl_comment": "Explicit Search Console property identifier. Use 'sc-domain:example.com' for a Domain property, or 'https://www.example.com/' for a URL-prefix property. Overrides the domain-based guess when set.",
+
+  "sitemapIndexPath": "/sitemap.xml",
+  "_sitemapIndexPath_comment": "Path to your sitemap index, relative to the site origin. Most sites use /sitemap.xml; adjust if yours lives elsewhere (e.g. /sitemaps/sitemap.xml).",
+
+  "routeFamilies": [],
+  "_routeFamilies_comment": "Optional list of known URL-prefix route families (e.g. ['blog', 'docs', 'products']) for smarter sitemap/export clustering in check-sitemap.cjs and parse-gsc-export.cjs. Leave empty to always full-scan/generic-bucket instead — this is safe, just less targeted."
+}

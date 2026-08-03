@@ -1,0 +1,10 @@
+# Per-site configuration — contains no secrets, but keeps the shared repo
+# free of any one deployment's specific site details. Copy from the
+# .example.json template.
+gsc-indexing-debugger.config.json
+
+# GSC API service account key — never commit credentials.
+.gsc-service-account.json
+
+# Investigation output — raw fetched HTML, generated reports.
+reports/
