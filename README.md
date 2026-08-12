@@ -118,6 +118,7 @@ using only `crypto`/`https`.
 ```bash
 node scripts/gsc-api-inspect.cjs https://www.example.com/some-page
 node scripts/gsc-api-get-sitemap.cjs sc-domain:example.com https://www.example.com/sitemap.xml
+node scripts/gsc-api-average-position.cjs sc-domain:example.com --start 2026-07-01 --end 2026-07-14
 ```
 
 If no key is found, scripts print `{ "automated": false, ... }` instead of
@@ -140,6 +141,7 @@ copied file-to-file, treat it as exposed and rotate it immediately.
 | `gsc-api-inspect.cjs` | Call the real Search Console URL Inspection API (needs a service account) |
 | `gsc-api-list-sitemaps.cjs` | Call sitemaps.list (aggregate — see caveat in `lib/gsc-api-client.cjs`) |
 | `gsc-api-get-sitemap.cjs` | Call sitemaps.get for one specific sitemap — more reliable than `.list()` |
+| `gsc-api-average-position.cjs` | Average position/clicks/impressions/CTR by date via Search Analytics — ranking/traffic trend, not an indexing check |
 
 Run any of them directly, e.g.:
 ```bash

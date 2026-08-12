@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added `gsc-api-average-position.cjs` and a `querySearchAnalytics()`
+  function on `lib/gsc-api-client.cjs`, calling the Search Console Search
+  Analytics API (same read-only service account as the other `gsc-api-*`
+  scripts). Reports average position/clicks/impressions/CTR grouped by
+  date, optionally filtered to one page and/or one exact query, plus a
+  simple and impression-weighted average-position summary across the
+  range. This is ranking/traffic evidence, not an indexing-state check —
+  documented as optional supplementary evidence for Phase 10 (Timeline),
+  not a new required phase. Verified end-to-end against a real production
+  GSC property.
 - Added `X-Robots-Tag` response-header checking to `extractSignals()`
   (`extract-signals.cjs`, `compare-pages.cjs`). Previously only checked the
   meta `robots` tag from the HTML -- a page can have a perfectly clean meta

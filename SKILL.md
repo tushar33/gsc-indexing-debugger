@@ -13,9 +13,10 @@ Report skeleton: `templates/report-template.md`
 JSON evidence shape: `templates/evidence-schema.json`
 Optional per-site config: `gsc-indexing-debugger.config.json` (see `.config.example.json`)
 Scripts: `scripts/*.cjs` (plain Node, no dependencies — run with `node`).
-`gsc-api-inspect.cjs`/`gsc-api-list-sitemaps.cjs`/`gsc-api-get-sitemap.cjs`
-need a service account key (optional — see "GSC API setup" in `README.md`);
-every other script needs nothing beyond Node itself.
+`gsc-api-inspect.cjs`/`gsc-api-list-sitemaps.cjs`/`gsc-api-get-sitemap.cjs`/
+`gsc-api-average-position.cjs` need a service account key (optional — see
+"GSC API setup" in `README.md`); every other script needs nothing beyond
+Node itself.
 
 # CORE SAFETY RULES
 
@@ -186,6 +187,17 @@ Build an explicit dated timeline from GSC crawl times + live-test dates. If
 GSC state is old, current live page is clean/stable with correct identity
 signals, and the bug can't be reproduced now → lean `STALE_GSC_STATE` /
 `WAITING_FOR_RECRAWL`, not a code change.
+
+Optional supplementary evidence — **not** an indexing-state check, so don't
+use it to justify a classification on its own:
+```
+node scripts/gsc-api-average-position.cjs <siteUrl> [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--page <url>] [--query <string>]
+```
+Average position/clicks/impressions/CTR by date via Search Analytics. Useful
+for corroborating the timeline — e.g. confirming a position/impression
+recovery lines up with a fix's ship date, or a decline lines up with when an
+issue was first reported. Requires the same service account key as
+`gsc-api-inspect.cjs`.
 
 ## Phase 11 — Classify
 Exactly one primary classification from `references/classification-guide.md`,

@@ -22,6 +22,10 @@ function sitemapsUrl(siteUrl) {
   return `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/sitemaps`;
 }
 
+function searchAnalyticsUrl(siteUrl) {
+  return `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`;
+}
+
 function base64url(input) {
   return Buffer.from(input)
     .toString('base64')
@@ -190,6 +194,42 @@ async function getSitemap(credentials, siteUrl, feedpath) {
   });
 }
 
+/**
+ * Search Console Search Analytics API — clicks/impressions/CTR/position,
+ * groupable by date/page/query/device/country. This is RANKING/TRAFFIC
+ * evidence, distinct from the indexing-state evidence the rest of this
+ * client returns — useful as supplementary Phase 10 (Timeline) evidence
+ * (e.g. confirming a position/impression trend recovered after a fix), not
+ * itself an indexing verdict.
+ *
+ * `position` in each row is Google's own average position for that
+ * date/page/query bucket already — this just passes dimensions/filters
+ * through and lets the caller aggregate across returned rows if it grouped
+ * by more than one dimension.
+ */
+async function querySearchAnalytics(credentials, siteUrl, {
+  startDate,
+  endDate,
+  dimensions = ['date'],
+  dimensionFilterGroups,
+  rowLimit = 1000,
+  searchType = 'web',
+} = {}) {
+  const accessToken = await getAccessToken(credentials, READONLY_SCOPE);
+  return httpsRequestJson(searchAnalyticsUrl(siteUrl), {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: {
+      startDate,
+      endDate,
+      dimensions,
+      rowLimit,
+      type: searchType,
+      ...(dimensionFilterGroups ? { dimensionFilterGroups } : {}),
+    },
+  });
+}
+
 module.exports = {
   READONLY_SCOPE,
   loadServiceAccountCredentials,
@@ -197,4 +237,5 @@ module.exports = {
   getAccessToken,
   inspectUrl,
   listSitemaps,
+  querySearchAnalytics,
 };
