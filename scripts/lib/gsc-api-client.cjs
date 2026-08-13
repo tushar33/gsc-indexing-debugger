@@ -213,6 +213,7 @@ async function querySearchAnalytics(credentials, siteUrl, {
   dimensions = ['date'],
   dimensionFilterGroups,
   rowLimit = 1000,
+  startRow = 0,
   searchType = 'web',
 } = {}) {
   const accessToken = await getAccessToken(credentials, READONLY_SCOPE);
@@ -224,10 +225,32 @@ async function querySearchAnalytics(credentials, siteUrl, {
       endDate,
       dimensions,
       rowLimit,
+      startRow,
       type: searchType,
       ...(dimensionFilterGroups ? { dimensionFilterGroups } : {}),
     },
   });
+}
+
+/**
+ * Search Analytics query.rowLimit caps at 25,000 per request — this pages
+ * through startRow until a page returns fewer than the max, so callers get
+ * every row Google has for the range instead of a silently truncated
+ * top-N. On a large site this can be many requests; each one counts
+ * against the property's Search Analytics quota.
+ */
+async function querySearchAnalyticsAll(credentials, siteUrl, opts = {}) {
+  const PAGE_SIZE = 25000;
+  let startRow = 0;
+  let allRows = [];
+  for (;;) {
+    const res = await querySearchAnalytics(credentials, siteUrl, { ...opts, rowLimit: PAGE_SIZE, startRow });
+    const rows = res.rows || [];
+    allRows = allRows.concat(rows);
+    if (rows.length < PAGE_SIZE) break;
+    startRow += PAGE_SIZE;
+  }
+  return { rows: allRows };
 }
 
 module.exports = {
@@ -238,4 +261,5 @@ module.exports = {
   inspectUrl,
   listSitemaps,
   querySearchAnalytics,
+  querySearchAnalyticsAll,
 };

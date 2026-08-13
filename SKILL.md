@@ -14,9 +14,9 @@ JSON evidence shape: `templates/evidence-schema.json`
 Optional per-site config: `gsc-indexing-debugger.config.json` (see `.config.example.json`)
 Scripts: `scripts/*.cjs` (plain Node, no dependencies — run with `node`).
 `gsc-api-inspect.cjs`/`gsc-api-list-sitemaps.cjs`/`gsc-api-get-sitemap.cjs`/
-`gsc-api-average-position.cjs` need a service account key (optional — see
-"GSC API setup" in `README.md`); every other script needs nothing beyond
-Node itself.
+`gsc-api-average-position.cjs`/`gsc-api-position-movers.cjs` need a service
+account key (optional — see "GSC API setup" in `README.md`); every other
+script needs nothing beyond Node itself.
 
 # CORE SAFETY RULES
 
@@ -198,6 +198,19 @@ for corroborating the timeline — e.g. confirming a position/impression
 recovery lines up with a fix's ship date, or a decline lines up with when an
 issue was first reported. Requires the same service account key as
 `gsc-api-inspect.cjs`.
+
+For a site-wide (not single-page) ranking movement question — "what got
+better/worse, what fell out of the rankings, what's new" — use:
+```
+node scripts/gsc-api-position-movers.cjs <siteUrl> --a-start YYYY-MM-DD --a-end YYYY-MM-DD --b-start YYYY-MM-DD --b-end YYYY-MM-DD [--dimension page|query] [--min-impressions N] [--top N]
+```
+Compares two date ranges by page (or query), fully paginated (no row-cap
+truncation). Reports `worsened`/`improved` (position changed in both
+periods), plus `vanished` (had traffic in period A, zero in period B) and
+`brandNew` (the reverse) — the vanished/brandNew lists often matter more
+than the worsened/improved deltas, since a page dropping out of the ranked
+set entirely is a bigger loss than any position-number change, and would be
+invisible to a two-point delta alone.
 
 ## Phase 11 — Classify
 Exactly one primary classification from `references/classification-guide.md`,

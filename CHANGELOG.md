@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- Added `gsc-api-position-movers.cjs` and a paginating
+  `querySearchAnalyticsAll()` helper on `lib/gsc-api-client.cjs` (the
+  Search Analytics `query.rowLimit` API cap is 25,000/request —
+  `querySearchAnalyticsAll` pages through `startRow` until a page returns
+  fewer than the max, so results reflect the full ranked-page set, not a
+  silently truncated top-N). The new script compares two date ranges by
+  page or query and reports `worsened`/`improved` position deltas plus
+  `vanished` (had traffic in period A, zero in period B) and `brandNew`
+  (the reverse) — surfaced on a real production site that `vanished`
+  often matters more than any position-number delta: a 2-period diff on
+  tuliresearchcentre.org found 303 pages that dropped out of the ranked
+  set entirely (79,839 lost impressions), where a naive top-N-sampled
+  comparison would have missed the majority of them and understated the
+  site-wide impact. That same investigation traced 58.7% of the vanished
+  impressions to one specific duplicate-URL pattern (a film
+  `cast-credit`/`credit-cast` legacy-alias route both independently
+  ranking despite an identical declared canonical) — confirming the
+  vanished/brandNew lists catch real, actionable technical findings that
+  a same-page-both-periods delta comparison structurally cannot.
 - Added `gsc-api-average-position.cjs` and a `querySearchAnalytics()`
   function on `lib/gsc-api-client.cjs`, calling the Search Console Search
   Analytics API (same read-only service account as the other `gsc-api-*`

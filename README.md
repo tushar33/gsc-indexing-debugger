@@ -119,6 +119,7 @@ using only `crypto`/`https`.
 node scripts/gsc-api-inspect.cjs https://www.example.com/some-page
 node scripts/gsc-api-get-sitemap.cjs sc-domain:example.com https://www.example.com/sitemap.xml
 node scripts/gsc-api-average-position.cjs sc-domain:example.com --start 2026-07-01 --end 2026-07-14
+node scripts/gsc-api-position-movers.cjs sc-domain:example.com --a-start 2026-06-16 --a-end 2026-07-15 --b-start 2026-07-16 --b-end 2026-08-12
 ```
 
 If no key is found, scripts print `{ "automated": false, ... }` instead of
@@ -142,6 +143,7 @@ copied file-to-file, treat it as exposed and rotate it immediately.
 | `gsc-api-list-sitemaps.cjs` | Call sitemaps.list (aggregate — see caveat in `lib/gsc-api-client.cjs`) |
 | `gsc-api-get-sitemap.cjs` | Call sitemaps.get for one specific sitemap — more reliable than `.list()` |
 | `gsc-api-average-position.cjs` | Average position/clicks/impressions/CTR by date via Search Analytics — ranking/traffic trend, not an indexing check |
+| `gsc-api-position-movers.cjs` | Site-wide page/query position comparison between two date ranges — worsened/improved/vanished/brand-new, fully paginated |
 
 Run any of them directly, e.g.:
 ```bash
