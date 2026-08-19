@@ -20,13 +20,24 @@ fresh evidence from multiple independent sources, build a timeline, and only
 then classify and recommend — instead of jumping straight from "ticket says
 bug" to "change code."
 
-## Install
+## Quick install (one line)
+
+From your project's repo root:
+
+```bash
+curl -sL https://raw.githubusercontent.com/tushar33/gsc-indexing-debugger/main/install.sh | bash
+```
+
+This clones the skill into `.claude/skills/gsc-indexing-debugger` (and drops
+the nested `.git`, so it doesn't create a submodule in your project).
+
+## Manual install
 
 Drop this into any project as a Claude Code skill:
 
 ```bash
 # from your project root
-git clone https://github.com/<your-org>/gsc-indexing-debugger.git .claude/skills/gsc-indexing-debugger
+git clone https://github.com/tushar33/gsc-indexing-debugger.git .claude/skills/gsc-indexing-debugger
 ```
 
 (Or `git submodule add` if you want to track updates. Or just copy the
