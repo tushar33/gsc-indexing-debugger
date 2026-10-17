@@ -14,6 +14,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
+const REQUEST_TIMEOUT_MS = 30000;
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const INSPECT_URL = 'https://searchconsole.googleapis.com/v1/urlInspection/index:inspect';
 const READONLY_SCOPE = 'https://www.googleapis.com/auth/webmasters.readonly';
@@ -72,6 +73,7 @@ function httpsPostForm(url, formObj) {
           'Content-Type': 'application/x-www-form-urlencoded',
           'Content-Length': Buffer.byteLength(body),
         },
+        timeout: REQUEST_TIMEOUT_MS,
       },
       (res) => {
         const chunks = [];
@@ -86,6 +88,7 @@ function httpsPostForm(url, formObj) {
       }
     );
     req.on('error', reject);
+    req.on('timeout', () => req.destroy(new Error(`Request to ${hostname} timed out after ${REQUEST_TIMEOUT_MS}ms`)));
     req.write(body);
     req.end();
   });
@@ -100,7 +103,7 @@ function httpsRequestJson(url, { method = 'GET', headers = {}, body } = {}) {
       reqHeaders['Content-Type'] = 'application/json';
       reqHeaders['Content-Length'] = Buffer.byteLength(payload);
     }
-    const req = https.request({ hostname, path: pathname + search, method, headers: reqHeaders }, (res) => {
+    const req = https.request({ hostname, path: pathname + search, method, headers: reqHeaders, timeout: REQUEST_TIMEOUT_MS }, (res) => {
       const chunks = [];
       res.on('data', (c) => chunks.push(c));
       res.on('end', () => {
@@ -112,6 +115,7 @@ function httpsRequestJson(url, { method = 'GET', headers = {}, body } = {}) {
       });
     });
     req.on('error', reject);
+    req.on('timeout', () => req.destroy(new Error(`Request to ${hostname} timed out after ${REQUEST_TIMEOUT_MS}ms`)));
     if (payload) req.write(payload);
     req.end();
   });
@@ -207,7 +211,7 @@ async function getSitemap(credentials, siteUrl, feedpath) {
  * through and lets the caller aggregate across returned rows if it grouped
  * by more than one dimension.
  */
-async function querySearchAnalytics(credentials, siteUrl, {
+function querySearchAnalyticsWithToken(accessToken, siteUrl, {
   startDate,
   endDate,
   dimensions = ['date'],
@@ -216,7 +220,6 @@ async function querySearchAnalytics(credentials, siteUrl, {
   startRow = 0,
   searchType = 'web',
 } = {}) {
-  const accessToken = await getAccessToken(credentials, READONLY_SCOPE);
   return httpsRequestJson(searchAnalyticsUrl(siteUrl), {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -232,6 +235,11 @@ async function querySearchAnalytics(credentials, siteUrl, {
   });
 }
 
+async function querySearchAnalytics(credentials, siteUrl, opts = {}) {
+  const accessToken = await getAccessToken(credentials, READONLY_SCOPE);
+  return querySearchAnalyticsWithToken(accessToken, siteUrl, opts);
+}
+
 /**
  * Search Analytics query.rowLimit caps at 25,000 per request — this pages
  * through startRow until a page returns fewer than the max, so callers get
@@ -241,10 +249,13 @@ async function querySearchAnalytics(credentials, siteUrl, {
  */
 async function querySearchAnalyticsAll(credentials, siteUrl, opts = {}) {
   const PAGE_SIZE = 25000;
+  // One token for the whole pagination run instead of signing a new JWT and
+  // requesting a new token per page.
+  const accessToken = await getAccessToken(credentials, READONLY_SCOPE);
   let startRow = 0;
   let allRows = [];
   for (;;) {
-    const res = await querySearchAnalytics(credentials, siteUrl, { ...opts, rowLimit: PAGE_SIZE, startRow });
+    const res = await querySearchAnalyticsWithToken(accessToken, siteUrl, { ...opts, rowLimit: PAGE_SIZE, startRow });
     const rows = res.rows || [];
     allRows = allRows.concat(rows);
     if (rows.length < PAGE_SIZE) break;

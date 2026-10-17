@@ -93,7 +93,16 @@ async function resolveLeafSitemaps(startUrl, { familyFilter, exclude, visited = 
   if (depth > MAX_DEPTH || visited.has(startUrl)) return [];
   visited.add(startUrl);
 
-  const res = await fetchText(startUrl);
+  let res;
+  try {
+    res = await fetchText(startUrl);
+  } catch (err) {
+    return [{ sitemapUrl: startUrl, error: err.message, urlCount: null, locs: [] }];
+  }
+  if (res.status < 200 || res.status >= 300) {
+    return [{ sitemapUrl: startUrl, error: `HTTP ${res.status}`, urlCount: null, locs: [] }];
+  }
+
   const locs = extractLocs(res.body);
 
   if (!isSitemapIndex(res.body)) {
@@ -133,10 +142,10 @@ async function main() {
   // Ambiguous path: no reliable family — recursively expand every branch
   // not excluded as structurally non-entity, so absence is evidence, not
   // an assumption from stopping one level too early.
-  const leafSitemaps = [];
-  for (const child of topLevelLocs) {
-    leafSitemaps.push(...await resolveLeafSitemaps(child, { familyFilter: family, exclude: EXCLUDE_FROM_FULL_SCAN }));
-  }
+  // Start from indexUrl itself (not its top-level <loc> entries) so a flat
+  // <urlset> at the index path is handled the same as a real sitemapindex —
+  // otherwise every page <loc> would be mistaken for a child sitemap.
+  const leafSitemaps = await resolveLeafSitemaps(indexUrl, { familyFilter: family, exclude: EXCLUDE_FROM_FULL_SCAN });
 
   const urlsToFind = args.also ? [url, args.also] : [url];
   const occurrences = {};
@@ -160,7 +169,7 @@ async function main() {
     familyGuess: family,
     ambiguousPrefixless: !family,
     scanMode: family ? 'single-family' : 'full-scan-excluding-non-entity-sitemaps',
-    leafSitemapsChecked: leafSitemaps.map(({ sitemapUrl, urlCount }) => ({ sitemapUrl, urlCount })),
+    leafSitemapsChecked: leafSitemaps.map(({ sitemapUrl, urlCount, error }) => ({ sitemapUrl, urlCount, ...(error ? { error } : {}) })),
     occurrences,
     foundIn,
   }, null, 2));

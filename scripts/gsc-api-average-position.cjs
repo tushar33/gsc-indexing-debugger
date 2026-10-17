@@ -46,9 +46,20 @@ function toIsoDate(d) {
   return d.toISOString().slice(0, 10);
 }
 
+function parseDateArg(name, value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error(`Invalid ${name} "${value}" — expected YYYY-MM-DD`);
+  }
+  const d = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) {
+    throw new Error(`Invalid ${name} "${value}" — expected YYYY-MM-DD`);
+  }
+  return d;
+}
+
 function defaultDateRange(startArg, endArg) {
-  const end = endArg ? new Date(endArg) : new Date();
-  const start = startArg ? new Date(startArg) : new Date(end.getTime() - 27 * 24 * 60 * 60 * 1000);
+  const end = endArg ? parseDateArg('--end', endArg) : new Date();
+  const start = startArg ? parseDateArg('--start', startArg) : new Date(end.getTime() - 27 * 24 * 60 * 60 * 1000);
   return { startDate: toIsoDate(start), endDate: toIsoDate(end) };
 }
 

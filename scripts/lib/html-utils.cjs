@@ -46,7 +46,7 @@ function extractVisibleText(html) {
 function normalizeForComparison(text) {
   return text
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -71,9 +71,13 @@ function extractFirst(html, regex) {
 }
 
 function extractMetaContent(html, attr, value) {
-  const re = new RegExp(`<meta[^>]+${attr}=["']${value}["'][^>]*content=["']([^"']*)["']`, 'i');
-  const reReversed = new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]*${attr}=["']${value}["']`, 'i');
-  return extractFirst(html, re) || extractFirst(html, reReversed);
+  // The content value's closing quote must match its opening quote type, so
+  // an apostrophe inside a double-quoted value (e.g. content="Don't miss")
+  // doesn't truncate the match at the first quote character of either kind.
+  const re = new RegExp(`<meta[^>]+${attr}=["']${value}["'][^>]*content=(["'])([\\s\\S]*?)\\1`, 'i');
+  const reReversed = new RegExp(`<meta[^>]+content=(["'])([\\s\\S]*?)\\1[^>]*${attr}=["']${value}["']`, 'i');
+  const m = html.match(re) || html.match(reReversed);
+  return m ? decodeEntities(m[2].trim()) : null;
 }
 
 function extractAllCanonicals(html) {

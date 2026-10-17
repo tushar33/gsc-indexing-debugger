@@ -51,13 +51,17 @@ async function main() {
   const delayMs = args.delayMs || 500;
   const results = [];
   for (let i = 0; i < count; i++) {
-    const res = await fetchAsGooglebot(url);
-    results.push({
-      iteration: i + 1,
-      status: res.httpStatus,
-      bytes: res.decodedSizeBytes,
-      hash: sha1(res.body),
-    });
+    try {
+      const res = await fetchAsGooglebot(url);
+      results.push({
+        iteration: i + 1,
+        status: res.httpStatus,
+        bytes: res.decodedSizeBytes,
+        hash: sha1(res.body),
+      });
+    } catch (err) {
+      results.push({ iteration: i + 1, status: 'ERROR', bytes: null, hash: null, error: err.message });
+    }
     if (i < count - 1) await sleep(delayMs);
   }
   console.log(JSON.stringify({

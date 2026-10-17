@@ -14,30 +14,42 @@
 const fs = require('fs');
 const { loadConfig } = require('./lib/config.cjs');
 
+// Parses the whole text in one pass (not line-by-line) so a quoted field
+// containing an embedded newline stays part of its own record instead of
+// being split into two rows.
 function parseCsv(text) {
-  const lines = text.split(/\r?\n/).filter((l) => l.length > 0);
-  if (lines.length === 0) return { headers: [], rows: [] };
-  const splitLine = (line) => {
-    const cells = [];
-    let cur = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
+  const records = [];
+  let record = [];
+  let cur = '';
+  let inQuotes = false;
+  const pushCell = () => { record.push(cur.trim()); cur = ''; };
+  const pushRecord = () => {
+    pushCell();
+    if (!(record.length === 1 && record[0] === '')) records.push(record);
+    record = [];
+  };
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
       if (ch === '"') {
-        if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
-        else inQuotes = !inQuotes;
-      } else if (ch === ',' && !inQuotes) {
-        cells.push(cur); cur = '';
+        if (text[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = false;
       } else {
         cur += ch;
       }
+      continue;
     }
-    cells.push(cur);
-    return cells.map((c) => c.trim());
-  };
-  const headers = splitLine(lines[0]).map((h) => h.toLowerCase());
-  const rows = lines.slice(1).map((l) => {
-    const cells = splitLine(l);
+    if (ch === '"') inQuotes = true;
+    else if (ch === ',') pushCell();
+    else if (ch === '\r') { /* no-op; \n ends the record */ }
+    else if (ch === '\n') pushRecord();
+    else cur += ch;
+  }
+  if (cur !== '' || record.length > 0) pushRecord();
+
+  if (records.length === 0) return { headers: [], rows: [] };
+  const headers = records[0].map((h) => h.toLowerCase());
+  const rows = records.slice(1).map((cells) => {
     const row = {};
     headers.forEach((h, i) => { row[h] = cells[i] !== undefined ? cells[i] : ''; });
     return row;
@@ -46,7 +58,11 @@ function parseCsv(text) {
 }
 
 function findUrlColumn(headers) {
-  return headers.find((h) => h === 'url' || h.includes('url')) || headers[0];
+  // Check for an exact `url` header before a broader substring match --
+  // Google treats a page's own URL and its (possibly different) selected
+  // canonical URL as distinct fields, and "Canonical URL" would otherwise
+  // win if it happens to precede "URL" in the export's column order.
+  return headers.find((h) => h === 'url') || headers.find((h) => h.includes('url')) || headers[0];
 }
 
 // A bare single-segment path is not reliably one specific family on sites
@@ -90,7 +106,12 @@ function main() {
   const text = fs.readFileSync(file, 'utf8');
   const { headers, rows } = parseCsv(text);
   const urlCol = findUrlColumn(headers);
-  const reasonCol = headers.find((h) => h.includes('reason') || h.includes('issue') || h.includes('status'));
+  // Google treats indexing status and indexing reason as different fields --
+  // prefer an explicit reason column so rows aren't grouped by status alone
+  // when both are present in the export.
+  const reasonCol = headers.find((h) => h.includes('reason'))
+    || headers.find((h) => h.includes('issue'))
+    || headers.find((h) => h.includes('status'));
   const samplesPerCluster = args.samplesPerCluster || 3;
 
   const invalid = rows.filter((r) => {

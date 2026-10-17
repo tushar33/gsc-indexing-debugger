@@ -12,7 +12,7 @@ const { sha1 } = require('./lib/html-utils.cjs');
 
 const HEADER_ALLOWLIST = [
   'content-type', 'content-length', 'server', 'date', 'age', 'cache-control',
-  'etag', 'x-cache', 'via',
+  'etag', 'x-cache', 'via', 'x-robots-tag', 'location', 'link', 'vary',
 ];
 
 function parseArgs(argv) {

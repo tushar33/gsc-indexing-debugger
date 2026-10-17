@@ -10,8 +10,10 @@
 
 ## Current GSC State
 
-<!-- Manual evidence only — GSC API automation is not set up in this repo.
-     Mark unavailable fields as GSC EVIDENCE NOT AUTOMATED. -->
+<!-- Record whether this came from gsc-api-inspect.cjs (automated: true) or
+     from manually-pasted GSC input (automated: false). Only mark a field
+     GSC EVIDENCE NOT AUTOMATED if it remains unavailable on the manual path
+     too — not simply because the API key isn't configured. -->
 
 ## Live Fetch Evidence
 
