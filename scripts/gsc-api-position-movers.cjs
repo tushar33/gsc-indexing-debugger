@@ -4,8 +4,8 @@
  * Optional supplementary evidence for Phase 10 (Timeline) — compares
  * average position/impressions per page (or query) between two date
  * ranges via Search Analytics, and reports:
- *   - worsened: pages whose position got worse (number went up) in both periods
- *   - improved: pages whose position got better (number went down) in both periods
+ *   - worsened: pages present in both periods whose position got worse (number went up)
+ *   - improved: pages present in both periods whose position got better (number went down)
  *   - vanished: had real traffic in period A, zero rows at all in period B
  *   - brandNew: zero rows in period A, real traffic in period B
  *   - siteWide: impression-weighted average position for each period

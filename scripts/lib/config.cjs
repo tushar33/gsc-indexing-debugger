@@ -37,7 +37,8 @@ function loadConfig(explicitPath) {
       configured: true,
     };
   } catch (e) {
-    return { ...DEFAULTS, configPath, configured: false };
+    console.error(`gsc-indexing-debugger: failed to parse ${configPath}: ${e.message}`);
+    return { ...DEFAULTS, configPath, configured: false, configError: e.message };
   }
 }
 

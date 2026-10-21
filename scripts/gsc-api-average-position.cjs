@@ -46,9 +46,23 @@ function toIsoDate(d) {
   return d.toISOString().slice(0, 10);
 }
 
+function parseDateArg(name, value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error(`Invalid ${name} "${value}" — expected YYYY-MM-DD`);
+  }
+  const d = new Date(`${value}T00:00:00Z`);
+  // A calendar-invalid date (e.g. 2026-02-30) doesn't throw -- it silently
+  // rolls over to a real date (2026-03-02). Round-trip and compare instead
+  // of trusting Number.isNaN alone.
+  if (Number.isNaN(d.getTime()) || toIsoDate(d) !== value) {
+    throw new Error(`Invalid ${name} "${value}" — expected YYYY-MM-DD`);
+  }
+  return d;
+}
+
 function defaultDateRange(startArg, endArg) {
-  const end = endArg ? new Date(endArg) : new Date();
-  const start = startArg ? new Date(startArg) : new Date(end.getTime() - 27 * 24 * 60 * 60 * 1000);
+  const end = endArg ? parseDateArg('--end', endArg) : new Date();
+  const start = startArg ? parseDateArg('--start', startArg) : new Date(end.getTime() - 27 * 24 * 60 * 60 * 1000);
   return { startDate: toIsoDate(start), endDate: toIsoDate(end) };
 }
 
