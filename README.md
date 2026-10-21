@@ -119,9 +119,13 @@ using only `crypto`/`https`.
    **Restricted** (read-only) access. Only an existing Owner on the property
    can do this. This is what actually limits what the key can see — the
    OAuth scope requested is also hardcoded read-only as a second layer.
-5. Save the downloaded JSON key as `.gsc-service-account.json` at the repo
-   root (already gitignored — never commit it), or point
-   `GSC_SERVICE_ACCOUNT_KEY_PATH` at wherever you keep it.
+5. Save the downloaded JSON key as `.gsc-service-account.json` next to this
+   skill's own `SKILL.md`/`scripts/` — wherever you've installed this skill
+   to, not necessarily your project's own repo root (`defaultKeyPath()` in
+   `scripts/lib/gsc-api-client.cjs` resolves relative to this skill's own
+   folder, two levels up from `scripts/lib`) — already gitignored (never
+   commit it), or point `GSC_SERVICE_ACCOUNT_KEY_PATH` at wherever you keep
+   it.
 6. If your property is a **Domain property**, set `"domain"` in your config
    file (or pass `--site-url sc-domain:example.com` / set `GSC_SITE_URL`) —
    otherwise the scripts default to guessing the URL-prefix form.

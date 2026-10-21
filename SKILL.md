@@ -204,13 +204,16 @@ better/worse, what fell out of the rankings, what's new" — use:
 ```
 node scripts/gsc-api-position-movers.cjs <siteUrl> --a-start YYYY-MM-DD --a-end YYYY-MM-DD --b-start YYYY-MM-DD --b-end YYYY-MM-DD [--dimension page|query] [--min-impressions N] [--top N]
 ```
-Compares two date ranges by page (or query), fully paginated (no row-cap
-truncation). Reports `worsened`/`improved` (position changed in both
-periods), plus `vanished` (had traffic in period A, zero in period B) and
-`brandNew` (the reverse) — the vanished/brandNew lists often matter more
-than the worsened/improved deltas, since a page dropping out of the ranked
-set entirely is a bigger loss than any position-number change, and would be
-invisible to a two-point delta alone.
+Compares two date ranges by page (or query), paginated past the
+25,000-row per-request cap. Reports `worsened`/`improved` (position changed
+in both periods), plus `vanishedCandidates` (had traffic in period A, zero
+in period B) and `brandNewCandidates` (the reverse) — these are candidates,
+not definitive proof a page disappeared/appeared, since Search Analytics
+can still omit lower-ranked rows independent of this script's own
+pagination. They often matter more than the worsened/improved deltas even
+so, since a page dropping out of the ranked set entirely is a bigger loss
+than any position-number change, and would be invisible to a two-point
+delta alone.
 
 ## Phase 11 — Classify
 Exactly one primary classification from `references/classification-guide.md`,
