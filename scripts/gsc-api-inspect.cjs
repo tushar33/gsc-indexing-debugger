@@ -56,6 +56,10 @@ async function main() {
   }
 
   const config = loadConfig();
+  if (config.configError) {
+    console.error(`Refusing to proceed with a malformed config file: ${config.configError}`);
+    process.exit(1);
+  }
   const siteUrl = args.siteUrl || process.env.GSC_SITE_URL || config.siteUrl || guessSiteUrl(url, config);
   const result = await inspectUrl(creds, { inspectionUrl: url, siteUrl });
   const indexStatus = result.inspectionResult && result.inspectionResult.indexStatusResult;

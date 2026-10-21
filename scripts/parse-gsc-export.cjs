@@ -103,6 +103,10 @@ function main() {
     process.exit(1);
   }
   const config = loadConfig();
+  if (config.configError) {
+    console.error(`Refusing to proceed with a malformed config file: ${config.configError}`);
+    process.exit(1);
+  }
   const text = fs.readFileSync(file, 'utf8');
   const { headers, rows } = parseCsv(text);
   const urlCol = findUrlColumn(headers);

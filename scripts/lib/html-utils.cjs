@@ -74,8 +74,10 @@ function extractMetaContent(html, attr, value) {
   // The content value's closing quote must match its opening quote type, so
   // an apostrophe inside a double-quoted value (e.g. content="Don't miss")
   // doesn't truncate the match at the first quote character of either kind.
-  const re = new RegExp(`<meta[^>]+${attr}=["']${value}["'][^>]*content=(["'])([\\s\\S]*?)\\1`, 'i');
-  const reReversed = new RegExp(`<meta[^>]+content=(["'])([\\s\\S]*?)\\1[^>]*${attr}=["']${value}["']`, 'i');
+  // Whitespace is allowed around `=` in valid HTML (e.g. `name = "robots"`),
+  // so don't require it to be adjacent to the quotes.
+  const re = new RegExp(`<meta[^>]+${attr}\\s*=\\s*["']${value}["'][^>]*content\\s*=\\s*(["'])([\\s\\S]*?)\\1`, 'i');
+  const reReversed = new RegExp(`<meta[^>]+content\\s*=\\s*(["'])([\\s\\S]*?)\\1[^>]*${attr}\\s*=\\s*["']${value}["']`, 'i');
   const m = html.match(re) || html.match(reReversed);
   return m ? decodeEntities(m[2].trim()) : null;
 }

@@ -5,10 +5,12 @@
  * Low concurrency by design: requests run sequentially with a delay between them.
  *
  * This script only buckets by status/size/hash equality (STABLE, HASH_VARIANCE,
- * SIZE_VARIANCE, INTERMITTENT_HTTP_FAILURE). If hashes vary, inspect the saved
- * responses to decide whether the variance is INTERMITTENT_RAW_SHELL,
- * INTERMITTENT_WRONG_ENTITY, or UNKNOWN_VARIANCE (content judgment call — not
- * automated here) per references/classification-guide.md.
+ * SIZE_VARIANCE, INTERMITTENT_HTTP_FAILURE, FETCH_FAILURE — every attempt
+ * errored, e.g. DNS/network failure, not an HTTP response to classify at
+ * all). If hashes vary, inspect the saved responses to decide whether the
+ * variance is INTERMITTENT_RAW_SHELL, INTERMITTENT_WRONG_ENTITY, or
+ * UNKNOWN_VARIANCE (content judgment call — not automated here) per
+ * references/classification-guide.md.
  *
  * Usage: node check-stability.cjs <url> [--count 10] [--delay-ms 500]
  */
@@ -35,6 +37,7 @@ function classify(results) {
   const hashes = new Set(results.map((r) => r.hash));
   const sizes = new Set(results.map((r) => r.bytes));
   if (statuses.size > 1) return 'INTERMITTENT_HTTP_FAILURE';
+  if (statuses.size === 1 && statuses.has('ERROR')) return 'FETCH_FAILURE';
   if (hashes.size === 1) return 'STABLE';
   if (sizes.size > 1) return 'SIZE_VARIANCE';
   return 'HASH_VARIANCE';

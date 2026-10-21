@@ -51,7 +51,10 @@ function parseDateArg(name, value) {
     throw new Error(`Invalid ${name} "${value}" — expected YYYY-MM-DD`);
   }
   const d = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(d.getTime())) {
+  // A calendar-invalid date (e.g. 2026-02-30) doesn't throw -- it silently
+  // rolls over to a real date (2026-03-02). Round-trip and compare instead
+  // of trusting Number.isNaN alone.
+  if (Number.isNaN(d.getTime()) || toIsoDate(d) !== value) {
     throw new Error(`Invalid ${name} "${value}" — expected YYYY-MM-DD`);
   }
   return d;

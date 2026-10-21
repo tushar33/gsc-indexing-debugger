@@ -78,6 +78,7 @@ function httpsPostForm(url, formObj) {
       (res) => {
         const chunks = [];
         res.on('data', (c) => chunks.push(c));
+        res.on('error', reject);
         res.on('end', () => {
           const text = Buffer.concat(chunks).toString('utf8');
           let json;
@@ -106,6 +107,7 @@ function httpsRequestJson(url, { method = 'GET', headers = {}, body } = {}) {
     const req = https.request({ hostname, path: pathname + search, method, headers: reqHeaders, timeout: REQUEST_TIMEOUT_MS }, (res) => {
       const chunks = [];
       res.on('data', (c) => chunks.push(c));
+      res.on('error', reject);
       res.on('end', () => {
         const text = Buffer.concat(chunks).toString('utf8');
         let json;

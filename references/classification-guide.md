@@ -145,11 +145,14 @@ HASH_VARIANCE
 INTERMITTENT_RAW_SHELL
 INTERMITTENT_WRONG_ENTITY
 INTERMITTENT_HTTP_FAILURE
+FETCH_FAILURE
 UNKNOWN_VARIANCE
 ```
 
 `check-stability.cjs` deterministically buckets into `STABLE` /
-`HASH_VARIANCE` / `SIZE_VARIANCE` / `INTERMITTENT_HTTP_FAILURE`. When hashes
+`HASH_VARIANCE` / `SIZE_VARIANCE` / `INTERMITTENT_HTTP_FAILURE` /
+`FETCH_FAILURE` (every attempt errored — e.g. DNS/network failure — so there
+was no HTTP response at all to classify as stable or varying). When hashes
 vary, inspect the differing saved responses to decide whether it's actually
 `INTERMITTENT_RAW_SHELL`, `INTERMITTENT_WRONG_ENTITY`, or truly
 `UNKNOWN_VARIANCE` — that judgment is not automated.
