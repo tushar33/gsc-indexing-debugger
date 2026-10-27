@@ -6,18 +6,26 @@
  * ranges via Search Analytics, and reports:
  *   - worsened: pages present in both periods whose position got worse (number went up)
  *   - improved: pages present in both periods whose position got better (number went down)
- *   - vanished: had real traffic in period A, zero rows at all in period B
- *   - brandNew: zero rows in period A, real traffic in period B
+ *   - vanishedCandidates: had real traffic in period A, zero rows at all in
+ *     period B in what Search Analytics returned -- a candidate, not proof
+ *     the page vanished (see caveat below)
+ *   - brandNewCandidates: the reverse (zero rows in period A, real traffic
+ *     in period B)
  *   - siteWide: impression-weighted average position for each period
  *
- * Uses querySearchAnalyticsAll (paginates past the 25,000-row API cap) so
- * results reflect the FULL ranked-page set for each period, not a sample —
- * on a large site this can be tens of thousands of rows and several API
- * calls per period.
+ * Uses querySearchAnalyticsAll to paginate past the 25,000-row per-request
+ * cap, so results aren't truncated to a single page's top rows -- on a
+ * large site this can be tens of thousands of rows and several API calls
+ * per period. This does NOT guarantee a complete result set: Search
+ * Analytics can still omit lower-ranked rows due to its own internal data
+ * limits, independent of this script's pagination. A key absent from one
+ * period's results is therefore a *candidate* vanished/brand-new entry, not
+ * definitive proof -- hence the Candidates naming below.
  *
- * `vanished`/`brandNew` matter as much as (often more than) the worsened/
- * improved deltas: a page that drops out of both periods' comparison set
- * entirely (survivorship bias) can represent a bigger visibility loss than
+ * `vanishedCandidates`/`brandNewCandidates` matter as much as (often more
+ * than) the worsened/improved deltas: a page that drops out of both
+ * periods' comparison set entirely (survivorship bias) can represent a
+ * bigger visibility loss than
  * any position-number change captured in `worsened`.
  *
  * Usage:
@@ -116,21 +124,21 @@ async function main() {
   const worsened = moves.filter((m) => m.delta > 0);
   const improved = moves.filter((m) => m.delta < 0).slice().reverse();
 
-  const vanished = [];
+  const vanishedCandidates = [];
   for (const [key, a] of mapA.entries()) {
     if (a.impressions >= minImpressions && !mapB.has(key)) {
-      vanished.push({ key, position: a.position, impressions: a.impressions });
+      vanishedCandidates.push({ key, position: a.position, impressions: a.impressions });
     }
   }
-  vanished.sort((x, y) => y.impressions - x.impressions);
+  vanishedCandidates.sort((x, y) => y.impressions - x.impressions);
 
-  const brandNew = [];
+  const brandNewCandidates = [];
   for (const [key, b] of mapB.entries()) {
     if (b.impressions >= minImpressions && !mapA.has(key)) {
-      brandNew.push({ key, position: b.position, impressions: b.impressions });
+      brandNewCandidates.push({ key, position: b.position, impressions: b.impressions });
     }
   }
-  brandNew.sort((x, y) => y.impressions - x.impressions);
+  brandNewCandidates.sort((x, y) => y.impressions - x.impressions);
 
   console.log(JSON.stringify({
     automated: true,
@@ -145,12 +153,12 @@ async function main() {
     qualifyingComparisons: moves.length,
     worsened: worsened.slice(0, top),
     improved: improved.slice(0, top),
-    vanished: vanished.slice(0, top),
-    vanishedTotalCount: vanished.length,
-    vanishedTotalImpressions: vanished.reduce((s, v) => s + v.impressions, 0),
-    brandNew: brandNew.slice(0, top),
-    brandNewTotalCount: brandNew.length,
-    note: `rowCountA/rowCountB reflect full pagination (no truncation), but worsened/improved/vanished/brandNew are each capped to --top (${top}) most-significant rows — see the *TotalCount fields for the untruncated totals.`,
+    vanishedCandidates: vanishedCandidates.slice(0, top),
+    vanishedCandidateCount: vanishedCandidates.length,
+    vanishedCandidateTotalImpressions: vanishedCandidates.reduce((s, v) => s + v.impressions, 0),
+    brandNewCandidates: brandNewCandidates.slice(0, top),
+    brandNewCandidateCount: brandNewCandidates.length,
+    note: `rowCountA/rowCountB reflect this script's own pagination (no --top-style truncation on the fetch), but Search Analytics itself can still omit lower-ranked rows due to its own internal limits -- vanishedCandidates/brandNewCandidates are candidates, not definitive absence/appearance evidence. worsened/improved/vanishedCandidates/brandNewCandidates are each capped to --top (${top}) most-significant rows — see the *Count fields for the untruncated totals.`,
   }, null, 2));
 }
 

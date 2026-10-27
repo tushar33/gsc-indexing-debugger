@@ -48,6 +48,7 @@ function singleFetch(urlStr, { userAgent = GOOGLEBOT_UA, timeoutMs = 15000 } = {
       (res) => {
         const chunks = [];
         res.on('data', (c) => chunks.push(c));
+        res.on('error', reject);
         res.on('end', () => {
           const raw = Buffer.concat(chunks);
           const body = decodeBody(raw, res.headers['content-encoding']);
